@@ -57,12 +57,13 @@ func index(slice []string, item string) int {
 
 
 func main() {
-
 	const URL_HEADER = "Ссылки"
 	exectable, _ := os.Executable()
 	_path := filepath.Dir(exectable)
+	
+	xlsx_file_path := filepath.Dir(filepath.Dir(filepath.Dir(_path)))
 
-	xlsx_file_name := path.Join(_path, "ссылки.xlsx")
+	xlsx_file_name := path.Join(xlsx_file_path, "ссылки.xlsx")
 	f, err := excelize.OpenFile(xlsx_file_name)
     if err != nil {
 		fmt.Println(err)
@@ -80,7 +81,7 @@ func main() {
 	var links []string
 	
 	t := time.Now()
-	image_path := path.Join(_path, "Фотографии " + t.Format("2006-01-02 15-04-05"))
+	image_path := path.Join(xlsx_file_path, "Фотографии " + t.Format("2006-01-02 15-04-05"))
     os.Mkdir(image_path, 0755)
 	
 	for i := 1; i <= len(rows)-1; i++ {
