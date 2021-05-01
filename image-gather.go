@@ -1,22 +1,22 @@
 package main
 
-
 import (
 	"errors"
-	"io"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"strings"
-	"time"
 	"path"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 )
 
-func downloadFile(URL string, path string) error {
+func downloadFile(URL string, save_path string) error {
 	//Get the response bytes from the url
+	fmt.Println("File download started " + URL)
 	response, err := http.Get(URL)
 	if err != nil {
 		return err
@@ -28,8 +28,10 @@ func downloadFile(URL string, path string) error {
 	}
 	//Create a empty file
 	s := strings.Split(URL, "/")
-	
-	fileName := path + "/" + s[len(s)-1]
+	fmt.Println(s)
+
+	fileName := path.Join(save_path, s[len(s)-1])
+	fmt.Println(fileName)
 
 	file, err := os.Create(fileName)
 	if err != nil {
@@ -43,32 +45,37 @@ func downloadFile(URL string, path string) error {
 		return err
 	}
 
+	fmt.Println("File saved into " + fileName)
 	return nil
 }
 
 func index(slice []string, item string) int {
-    for i, _ := range slice {
-        if slice[i] == item {
-            return i
-        }
-    }
-    return -1
+	for i, _ := range slice {
+		if slice[i] == item {
+			return i
+		}
+	}
+	return -1
 }
-
 
 func main() {
 	const URL_HEADER = "Ссылки"
 	exectable, _ := os.Executable()
 	_path := filepath.Dir(exectable)
-	
-	xlsx_file_path := filepath.Dir(filepath.Dir(filepath.Dir(_path)))
+
+	xlsx_file_path := _path
+
+	if filepath.Base(_path) == "MacOS" {
+		xlsx_file_path = filepath.Dir(filepath.Dir(filepath.Dir(_path)))
+	}
 
 	xlsx_file_name := path.Join(xlsx_file_path, "ссылки.xlsx")
+
 	f, err := excelize.OpenFile(xlsx_file_name)
-    if err != nil {
+	if err != nil {
 		fmt.Println(err)
-        return
-    }
+		return
+	}
 
 	var headers []string
 	firstSheet := f.WorkBook.Sheets.Sheet[0].Name
@@ -77,18 +84,33 @@ func main() {
 		headers = append(headers, colCell)
 	}
 	links_column_index := index(headers, URL_HEADER)
-	
+
 	var links []string
-	
+
 	t := time.Now()
-	image_path := path.Join(xlsx_file_path, "Фотографии " + t.Format("2006-01-02 15-04-05"))
-    os.Mkdir(image_path, 0755)
-	
+	fmt.Println(xlsx_file_path)
+	image_path := path.Join(xlsx_file_path, "Фотографии "+t.Format("2006-01-02 15-04-05"))
+	os.Mkdir(image_path, 0755)
+	fmt.Println(image_path)
+
+	var errors []string
+
 	for i := 1; i <= len(rows)-1; i++ {
 		cell := rows[i][links_column_index]
-		fmt.Println(cell)
-		downloadFile(cell, image_path)
+		err = downloadFile(cell, image_path)
+		if err != nil {
+			errors = append(errors, cell+"\t"+err.Error())
+			fmt.Println(err)
+		}
 		links = append(links, cell)
 	}
-
+	fmt.Println("")
+	if len(errors) > 0 {
+		fmt.Println("Ошибки ниже:")
+		for _, err := range errors {
+			fmt.Println(err)
+		}
+	} else {
+		fmt.Println("Ошибок нет")
+	}
 }

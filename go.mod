@@ -1,4 +1,4 @@
-module photo.app/Contents/MacOS/photo
+module photo
 
 go 1.16
 
