@@ -16,6 +16,10 @@ import (
 
 func downloadFile(URL string, save_path string) error {
 	//Get the response bytes from the url
+	if strings.HasPrefix(URL, "http") != true {
+		URL = "https://" + URL
+	}
+
 	fmt.Println("File download started " + URL)
 	response, err := http.Get(URL)
 	if err != nil {
@@ -95,6 +99,9 @@ func main() {
 
 	var errors []string
 
+	count := 1
+	PAUSE_PER := 100
+
 	for i := 1; i <= len(rows)-1; i++ {
 		cell := rows[i][links_column_index]
 		err = downloadFile(cell, image_path)
@@ -102,7 +109,15 @@ func main() {
 			errors = append(errors, cell+"\t"+err.Error())
 			fmt.Println(err)
 		}
+		fmt.Println(fmt.Sprintf("Обработано фотографий %d", count))
+
 		links = append(links, cell)
+		if count > PAUSE_PER {
+			PAUSE_PER += 100
+			fmt.Println("Пауза на 15 секунд")
+			time.Sleep(15 * time.Second)
+		}
+		count++
 	}
 	fmt.Println("")
 	if len(errors) > 0 {
