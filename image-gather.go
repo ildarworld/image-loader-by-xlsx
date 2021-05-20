@@ -66,6 +66,12 @@ func main() {
 	const URL_HEADER = "Ссылки"
 	exectable, _ := os.Executable()
 	_path := filepath.Dir(exectable)
+	pause := 0
+
+	fmt.Print("Введите длительность паузы в секундах: ")
+	_, err := fmt.Scanf("%d", &pause)
+	fmt.Println("Пауза устанволена:")
+	fmt.Println(pause)
 
 	xlsx_file_path := _path
 
@@ -103,22 +109,25 @@ func main() {
 	PAUSE_PER := 100
 
 	for i := 1; i <= len(rows)-1; i++ {
-		cell := rows[i][links_column_index]
-		err = downloadFile(cell, image_path)
-		if err != nil {
-			errors = append(errors, cell+"\t"+err.Error())
-			fmt.Println(err)
+		cell_list := strings.Split(rows[i][links_column_index], ";")
+		// Dowmload all images even links are separetaed by comma
+		for j := 0; j < len(cell_list); j++ {
+			err = downloadFile(cell_list[j], image_path)
+			if err != nil {
+				errors = append(errors, cell_list[j]+"\t"+err.Error())
+				fmt.Println(err)
+			}
+			fmt.Println(fmt.Sprintf("Обработано фотографий %d", count))
+			links = append(links, cell_list[j])
+			if count > PAUSE_PER {
+				PAUSE_PER += 100
+				fmt.Printf("Пауза на %d секунд\n", pause)
+				time.Sleep(time.Duration(pause) * time.Second)
+			}
+			count++
 		}
-		fmt.Println(fmt.Sprintf("Обработано фотографий %d", count))
-
-		links = append(links, cell)
-		if count > PAUSE_PER {
-			PAUSE_PER += 100
-			fmt.Println("Пауза на 15 секунд")
-			time.Sleep(15 * time.Second)
-		}
-		count++
 	}
+
 	fmt.Println("")
 	if len(errors) > 0 {
 		fmt.Println("Ошибки ниже:")
