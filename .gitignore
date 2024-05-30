@@ -5,3 +5,5 @@
 photo
 photo.app/Contents/MacOS/*
 *.zip
+
+.vscode/
