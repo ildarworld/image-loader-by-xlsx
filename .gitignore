@@ -1,6 +1,5 @@
 *.xlsx
 *.jpg
-*.sum
 Фотографии*/
 photo
 photo.app/Contents/MacOS/*
