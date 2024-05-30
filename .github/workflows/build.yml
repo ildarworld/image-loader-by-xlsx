@@ -1,0 +1,43 @@
+name: Build and Package Go Application
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+
+      - name: Build for Windows
+        run: |
+          GOOS=windows GOARCH=amd64 go build -o photo.exe .
+
+      - name: Archive the build output
+        uses: actions/upload-artifact@v3
+        with:
+          name: photo-windows
+          path: photo.exe
+
+      - name: Package the executable
+        run: |
+          zip -r photo-windows.zip photo.exe
+        shell: bash
+
+      - name: Upload package
+        uses: actions/upload-artifact@v3
+        with:
+          name: photo-windows-package
+          path: photo-windows.zip
