@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,15 +19,30 @@ func downloadFile(URL string, save_path string) error {
 		URL = "https://" + URL
 	}
 
+	client := &http.Client{}
+
+	// Create the request
+	req, err := http.NewRequest("GET", URL, nil)
+	if err != nil {
+		return err
+	}
+
+	// Set headers to emulate a browser
+	req.Header.Set(
+		"User-Agent",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+	)
+
+	// Perform the request
 	fmt.Println("File download started " + URL)
-	response, err := http.Get(URL)
+	response, err := client.Do(req)
 	if err != nil {
 		return err
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode != 200 {
-		return errors.New("Received non 200 response code")
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("received non 200 response code: %s", response.Body)
 	}
 	//Create a empty file
 	s := strings.Split(URL, "/")
@@ -64,8 +78,11 @@ func index(slice []string, item string) int {
 
 func main() {
 	const URL_HEADER = "Ссылки"
-	exectable, _ := os.Executable()
-	_path := filepath.Dir(exectable)
+	// executable, _ := os.Executable()
+	// _path := filepath.Dir(executable)
+	_path, _ := os.Getwd()
+	// fmt.Println("Current Directory:", _path)
+
 	pause := 0
 
 	fmt.Print("Введите длительность паузы в секундах: ")
